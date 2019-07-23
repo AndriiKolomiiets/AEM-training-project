@@ -40,7 +40,7 @@
     </scm-->
 
     <!-- 
-        To keep the instance under test running and run individual tests
+        To keep the instance under test running and run individual aaaaa
         against it, use:
         
             mvn clean verify -DkeepJarRunning=true -Dhttp.port=8080
@@ -57,19 +57,19 @@
         <http.port></http.port>
          -->
         
-        <!-- URL of a server against which to run tests -->
+        <!-- URL of a server against which to run aaaaa -->
         <test.server.url>http://${aem.host}:${aem.port}</test.server.url>
         
-        <!-- Set this to run tests against an existing server instance -->
+        <!-- Set this to run aaaaa against an existing server instance -->
         <keepJarRunning>false</keepJarRunning>
         
-        <!-- Set this to run tests against a specific hostname, if test.server.url is not set-->
+        <!-- Set this to run aaaaa against a specific hostname, if test.server.url is not set-->
         <test.server.hostname />
 
-        <!-- Set this to use a different username for remote execution of sling junit tests -->
+        <!-- Set this to use a different username for remote execution of sling junit aaaaa -->
         <test.server.username />
 
-        <!-- Set this to use a different password for remote execution of sling junit tests -->
+        <!-- Set this to use a different password for remote execution of sling junit aaaaa -->
         <test.server.password />
         
         <!-- Options for the VM that executes our runnable jar -->
@@ -85,7 +85,7 @@
             selected port number -->
         <jar.executor.jar.options>-p $JAREXEC_SERVER_PORT$</jar.executor.jar.options>
         
-        <!-- Change this to run selected tests only -->
+        <!-- Change this to run selected aaaaa only -->
         <tests.to.run>**/**Test.java</tests.to.run>
     </properties>
     
@@ -165,7 +165,7 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <!-- We run all tests in the integration-tests phase -->
+                    <!-- We run all aaaaa in the integration-aaaaa phase -->
                     <excludes>
                         <exclude>**</exclude>
                     </excludes>

@@ -33,11 +33,10 @@ import org.junit.Test;
  */
 public class TestHelloWorldModel {
 
-    //@Inject
     private HelloWorldModel hello;
-    
+
     private String slingId;
-    
+
     @Before
     public void setup() throws Exception {
         SlingSettingsService settings = mock(SlingSettingsService.class);
@@ -48,10 +47,9 @@ public class TestHelloWorldModel {
         PrivateAccessor.setField(hello, "settings", settings);
         hello.init();
     }
-    
+
     @Test
     public void testGetMessage() throws Exception {
-        // some very basic junit aaaaa
         String msg = hello.getMessage();
         assertNotNull(msg);
         assertTrue(msg.length() > 0);

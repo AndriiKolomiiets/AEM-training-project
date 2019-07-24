@@ -3,5 +3,5 @@
           jcr:primaryType="cq:Component"
           jcr:title="Training Top Navigation Component"
           jcr:description="Top Navigation for the Training Project"
-          sling:resourceSuperType="/training/templates/page-content/"
+          sling:resourceSuperType="wcm/foundation/components/page"
           componentGroup="training"/>

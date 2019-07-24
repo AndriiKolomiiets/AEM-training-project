@@ -1,12 +1,12 @@
 package apps.training.components.topnav;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Iterator;
-
 import com.adobe.cq.sightly.WCMUsePojo;
 import com.day.cq.wcm.api.Page;
 import com.day.cq.wcm.api.PageFilter;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 public class TopNav extends WCMUsePojo {
 
@@ -17,14 +17,9 @@ public class TopNav extends WCMUsePojo {
         final Page rootPage = getCurrentPage().getAbsoluteParent(1);
         if (rootPage != null) {
             Iterator<Page> childPages = rootPage.listChildren(new
-                    PageFilter(getRequest()));
+                    PageFilter(getRequest()), true);
             while (childPages.hasNext()) {
-                Page innerPage = childPages.next();
-                items.add(innerPage);
-                Iterator<Page> innerChildPages = innerPage.listChildren();
-                while (innerChildPages.hasNext()) {
-                    items.add(innerChildPages.next());
-                }
+                items.add(childPages.next());
             }
         }
     }

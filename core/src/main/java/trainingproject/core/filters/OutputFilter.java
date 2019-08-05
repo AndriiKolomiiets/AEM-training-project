@@ -38,16 +38,30 @@ public class OutputFilter implements Filter {
     private boolean turnUpDown;
     private final Logger LOGGER = LoggerFactory.getLogger(getClass());
 
-    boolean isGrayScale() {
-        return grayScale;
-    }
-
-    boolean isTurnUpDown() {
-        return turnUpDown;
+    @Override
+    public void init(FilterConfig filterConfig) {
     }
 
     @Override
-    public void init(FilterConfig filterConfig) {
+    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
+        final SlingHttpServletRequest request = (SlingHttpServletRequest) servletRequest;
+        final SlingHttpServletResponse response = (SlingHttpServletResponse) servletResponse;
+
+        Resource imageResource = getImageResource(request);
+        Asset asset = getAsset(imageResource);
+        Layer layer = getLayer(asset);
+
+        if (layer != null) {
+            transformImages(layer);
+            writeLayerToResponse(response, layer);
+        }
+
+        filterChain.doFilter(request, response);
+        LOGGER.info("Filter has finished successfully.");
+    }
+
+    @Override
+    public void destroy() {
     }
 
     @Activate
@@ -58,21 +72,12 @@ public class OutputFilter implements Filter {
         LOGGER.info("OutputFilterConfig activation done: grayScale {}, turnUpDown: {}", grayScale, turnUpDown);
     }
 
-    @Override
-    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
-        final SlingHttpServletRequest request = (SlingHttpServletRequest) servletRequest;
-        final SlingHttpServletResponse response = (SlingHttpServletResponse) servletResponse;
-        Asset asset = null;
-        Layer layer = null;
+    boolean isGrayScale() {
+        return grayScale;
+    }
 
-        layer = getLayer(request, asset, layer);
-
-        if (layer != null) {
-            transformImages(layer);
-            writeLayerToResponse(response, layer);
-        }
-        filterChain.doFilter(request, response);
-        LOGGER.info("Filter has finished successfully.");
+    boolean isTurnUpDown() {
+        return turnUpDown;
     }
 
     private void writeLayerToResponse(SlingHttpServletResponse response, Layer layer) throws IOException {
@@ -92,23 +97,18 @@ public class OutputFilter implements Filter {
         }
     }
 
-    private Layer getLayer(SlingHttpServletRequest request, Asset asset, Layer layer) {
-        Resource resource = request.getResource();
-        String fileReference = resource.getValueMap().get(VALUE_MAP_FILE_REFERENCE, String.class);
-        Resource imageResource = fileReference != null ? request.getResourceResolver().getResource(fileReference) : resource;
-
-        if (imageResource != null) {
-            asset = imageResource.adaptTo(Asset.class);
-            LOGGER.info("Asset captured, asset: {}", asset);
-        }
-        if (asset != null) {
-            layer = ImageHelper.createLayer(asset.getRendition(IMAGE_RENDITION_ORIGINAL));
-            LOGGER.info("Layer captured, layer: {}", layer);
-        }
-        return layer;
+    private Asset getAsset(Resource imageResource) {
+        return imageResource != null ? imageResource.adaptTo(Asset.class) : null;
     }
 
-    @Override
-    public void destroy() {
+    private Layer getLayer(Asset imageAsset) {
+        return imageAsset != null ? ImageHelper.createLayer(imageAsset.getRendition(IMAGE_RENDITION_ORIGINAL)) : null;
+    }
+
+    private Resource getImageResource(SlingHttpServletRequest request) {
+        Resource resource = request.getResource();
+        String fileReference = resource.getValueMap().get(VALUE_MAP_FILE_REFERENCE, String.class);
+
+        return fileReference != null ? request.getResourceResolver().getResource(fileReference) : resource;
     }
 }

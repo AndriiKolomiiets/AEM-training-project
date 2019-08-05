@@ -27,6 +27,10 @@ import static org.mockito.Mockito.*;
 @PrepareForTest({ImageHelper.class, OutputFilter.class})
 public class OutputFilterTest {
     private OutputFilter outputFilter;
+    private static final int WRITE_QUALITY = 1;
+    private static final int ROTATE_UPSIDE_DOWN_DEGREES = 180;
+    private static final String VALUE_MAP_FILE_REFERENCE = "fileReference";
+    private static final String IMAGE_RENDITION_ORIGINAL = "original";
     //<editor-fold desc="Mocks">
     @Mock
     private Layer layer;
@@ -55,6 +59,14 @@ public class OutputFilterTest {
     @Before
     public void init() {
         outputFilter = new OutputFilter();
+        when(slingHttpServletRequest.getResource()).thenReturn(resource);
+        when(resource.getValueMap()).thenReturn(valueMap);
+        when(valueMap.get(VALUE_MAP_FILE_REFERENCE, String.class)).thenReturn(VALUE_MAP_FILE_REFERENCE);
+        when(slingHttpServletRequest.getResourceResolver()).thenReturn(resourceResolver);
+        when(resourceResolver.getResource(VALUE_MAP_FILE_REFERENCE)).thenReturn(imageResource);
+        when(imageResource.adaptTo(Asset.class)).thenReturn(asset);
+        when(asset.getRendition(IMAGE_RENDITION_ORIGINAL)).thenReturn(original);
+
     }
 
     @Test
@@ -62,8 +74,8 @@ public class OutputFilterTest {
         when(outputFilterConfig.grayScale()).thenReturn(true);
         when(outputFilterConfig.turnUpDown()).thenReturn(false);
         outputFilter.activate(outputFilterConfig);
-        verify(outputFilterConfig, times(1)).grayScale();
-        verify(outputFilterConfig, times(1)).turnUpDown();
+        verify(outputFilterConfig).grayScale();
+        verify(outputFilterConfig).turnUpDown();
         boolean grayScaleTest = outputFilter.isGrayScale();
         boolean turnUpDownTest = outputFilter.isTurnUpDown();
         assertTrue(grayScaleTest);
@@ -74,68 +86,47 @@ public class OutputFilterTest {
     public void DoFilter_CallTurnUpDownAndGrayScaleWhenBothAreTrue_Success() throws Exception {
         when(outputFilterConfig.grayScale()).thenReturn(true);
         when(outputFilterConfig.turnUpDown()).thenReturn(true);
-
         outputFilter.activate(outputFilterConfig);
-        when(slingHttpServletRequest.getResource()).thenReturn(resource);
-        when(resource.getValueMap()).thenReturn(valueMap);
-        when(valueMap.get("fileReference", String.class)).thenReturn("fileReference");
-        when(slingHttpServletRequest.getResourceResolver()).thenReturn(resourceResolver);
-        when(resourceResolver.getResource("fileReference")).thenReturn(imageResource);
-        when(imageResource.adaptTo(Asset.class)).thenReturn(asset);
-        when(asset.getRendition("original")).thenReturn(original);
-
         PowerMockito.mockStatic(ImageHelper.class);
         PowerMockito.when(ImageHelper.createLayer(original))
                 .thenReturn(layer);
-
         outputFilter.doFilter(slingHttpServletRequest, slingHttpServletResponse, filterChain);
-        verify(layer, times(1)).rotate(180);
-        verify(layer, times(1)).grayscale();
+        verify(layer).rotate(ROTATE_UPSIDE_DOWN_DEGREES);
+        verify(layer).grayscale();
+        verify(layer).getMimeType();
+        verify(layer).write(null, WRITE_QUALITY, slingHttpServletResponse.getOutputStream());
+        verifyNoMoreInteractions(layer);
     }
 
     @Test
     public void DoFilter_CallTurnUpDownWhenTurnDownIsTrue_Success() throws Exception {
         when(outputFilterConfig.grayScale()).thenReturn(false);
         when(outputFilterConfig.turnUpDown()).thenReturn(true);
-
         outputFilter.activate(outputFilterConfig);
-        when(slingHttpServletRequest.getResource()).thenReturn(resource);
-        when(resource.getValueMap()).thenReturn(valueMap);
-        when(valueMap.get("fileReference", String.class)).thenReturn("fileReference");
-        when(slingHttpServletRequest.getResourceResolver()).thenReturn(resourceResolver);
-        when(resourceResolver.getResource("fileReference")).thenReturn(imageResource);
-        when(imageResource.adaptTo(Asset.class)).thenReturn(asset);
-        when(asset.getRendition("original")).thenReturn(original);
-
         PowerMockito.mockStatic(ImageHelper.class);
         PowerMockito.when(ImageHelper.createLayer(original))
                 .thenReturn(layer);
-
         outputFilter.doFilter(slingHttpServletRequest, slingHttpServletResponse, filterChain);
-        verify(layer, times(1)).rotate(180);
+        verify(layer).rotate(ROTATE_UPSIDE_DOWN_DEGREES);
         verify(layer, never()).grayscale();
+        verify(layer).getMimeType();
+        verify(layer).write(null, WRITE_QUALITY, slingHttpServletResponse.getOutputStream());
+        verifyNoMoreInteractions(layer);
     }
 
     @Test
     public void DoFilter_CallGrayScaleWhenGrayScaleIsTrue_Success() throws Exception {
         when(outputFilterConfig.grayScale()).thenReturn(true);
         when(outputFilterConfig.turnUpDown()).thenReturn(false);
-
         outputFilter.activate(outputFilterConfig);
-        when(slingHttpServletRequest.getResource()).thenReturn(resource);
-        when(resource.getValueMap()).thenReturn(valueMap);
-        when(valueMap.get("fileReference", String.class)).thenReturn("fileReference");
-        when(slingHttpServletRequest.getResourceResolver()).thenReturn(resourceResolver);
-        when(resourceResolver.getResource("fileReference")).thenReturn(imageResource);
-        when(imageResource.adaptTo(Asset.class)).thenReturn(asset);
-        when(asset.getRendition("original")).thenReturn(original);
-
         PowerMockito.mockStatic(ImageHelper.class);
         PowerMockito.when(ImageHelper.createLayer(original))
                 .thenReturn(layer);
         outputFilter.doFilter(slingHttpServletRequest, slingHttpServletResponse, filterChain);
-        verify(layer, times(1)).grayscale();
-        verify(layer, never()).rotate(180);
+        verify(layer).grayscale();
+        verify(layer, never()).rotate(ROTATE_UPSIDE_DOWN_DEGREES);
+        verify(layer).getMimeType();
+        verify(layer).write(null, WRITE_QUALITY, slingHttpServletResponse.getOutputStream());
+        verifyNoMoreInteractions(layer);
     }
-
 }

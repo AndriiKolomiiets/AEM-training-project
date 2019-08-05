@@ -39,21 +39,21 @@ public class OutputFilterTest {
     @Mock
     private Asset asset;
     @Mock
-    FilterChain filterChain;
+    private FilterChain filterChain;
     @Mock
-    SlingHttpServletRequest slingHttpServletRequest;
+    private SlingHttpServletRequest slingHttpServletRequest;
     @Mock
-    SlingHttpServletResponse slingHttpServletResponse;
+    private SlingHttpServletResponse slingHttpServletResponse;
     @Mock
-    Resource resource;
+    private Resource resource;
     @Mock
-    Resource imageResource;
+    private Resource imageResource;
     @Mock
-    ValueMap valueMap;
+    private ValueMap valueMap;
     @Mock
-    ResourceResolver resourceResolver;
+    private ResourceResolver resourceResolver;
     @Mock
-    Rendition original;
+    private Rendition original;
     //</editor-fold>
 
     @Before
@@ -66,14 +66,18 @@ public class OutputFilterTest {
         when(resourceResolver.getResource(VALUE_MAP_FILE_REFERENCE)).thenReturn(imageResource);
         when(imageResource.adaptTo(Asset.class)).thenReturn(asset);
         when(asset.getRendition(IMAGE_RENDITION_ORIGINAL)).thenReturn(original);
-
+        PowerMockito.mockStatic(ImageHelper.class);
+        PowerMockito.when(ImageHelper.createLayer(original))
+                .thenReturn(layer);
     }
 
     @Test
     public void Activate_GrayScaleAndUpTurnDown_Assigned() {
         when(outputFilterConfig.grayScale()).thenReturn(true);
         when(outputFilterConfig.turnUpDown()).thenReturn(false);
+
         outputFilter.activate(outputFilterConfig);
+
         verify(outputFilterConfig).grayScale();
         verify(outputFilterConfig).turnUpDown();
         boolean grayScaleTest = outputFilter.isGrayScale();
@@ -86,11 +90,10 @@ public class OutputFilterTest {
     public void DoFilter_CallTurnUpDownAndGrayScaleWhenBothAreTrue_Success() throws Exception {
         when(outputFilterConfig.grayScale()).thenReturn(true);
         when(outputFilterConfig.turnUpDown()).thenReturn(true);
+
         outputFilter.activate(outputFilterConfig);
-        PowerMockito.mockStatic(ImageHelper.class);
-        PowerMockito.when(ImageHelper.createLayer(original))
-                .thenReturn(layer);
         outputFilter.doFilter(slingHttpServletRequest, slingHttpServletResponse, filterChain);
+
         verify(layer).rotate(ROTATE_UPSIDE_DOWN_DEGREES);
         verify(layer).grayscale();
         verify(layer).getMimeType();
@@ -102,11 +105,10 @@ public class OutputFilterTest {
     public void DoFilter_CallTurnUpDownWhenTurnDownIsTrue_Success() throws Exception {
         when(outputFilterConfig.grayScale()).thenReturn(false);
         when(outputFilterConfig.turnUpDown()).thenReturn(true);
+
         outputFilter.activate(outputFilterConfig);
-        PowerMockito.mockStatic(ImageHelper.class);
-        PowerMockito.when(ImageHelper.createLayer(original))
-                .thenReturn(layer);
         outputFilter.doFilter(slingHttpServletRequest, slingHttpServletResponse, filterChain);
+
         verify(layer).rotate(ROTATE_UPSIDE_DOWN_DEGREES);
         verify(layer, never()).grayscale();
         verify(layer).getMimeType();
@@ -118,11 +120,10 @@ public class OutputFilterTest {
     public void DoFilter_CallGrayScaleWhenGrayScaleIsTrue_Success() throws Exception {
         when(outputFilterConfig.grayScale()).thenReturn(true);
         when(outputFilterConfig.turnUpDown()).thenReturn(false);
+
         outputFilter.activate(outputFilterConfig);
-        PowerMockito.mockStatic(ImageHelper.class);
-        PowerMockito.when(ImageHelper.createLayer(original))
-                .thenReturn(layer);
         outputFilter.doFilter(slingHttpServletRequest, slingHttpServletResponse, filterChain);
+
         verify(layer).grayscale();
         verify(layer, never()).rotate(ROTATE_UPSIDE_DOWN_DEGREES);
         verify(layer).getMimeType();

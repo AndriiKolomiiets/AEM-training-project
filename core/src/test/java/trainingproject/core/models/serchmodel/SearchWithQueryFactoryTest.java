@@ -11,7 +11,6 @@ public class SearchWithQueryFactoryTest {
     private String QUERY_MANAGER = "QueryManager";
     private String TEST_TEXT = "TestText";
 
-
     @Before
     public void init(){
         queryFactory = new SearchWithQueryFactory();

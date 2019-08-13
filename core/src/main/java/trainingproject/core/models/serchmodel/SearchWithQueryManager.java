@@ -21,23 +21,20 @@ import static javax.jcr.query.Query.JCR_SQL2;
 public class SearchWithQueryManager implements SearchWithQuery {
 
     private final Logger LOGGER = LoggerFactory.getLogger(getClass());
-    private Session session;
     private static final String QUERY_TEMPLATE = "SELECT * FROM [dam:Asset] WHERE ISDESCENDANTNODE('%s') AND CONTAINS(*, '%s')";
-
-    @Optional
-    private QueryManager queryManager = null;
 
     @Override
     public List<String> getPaths(String linkTo, String text, ResourceResolver resourceResolver) {
         List<String> references = null;
+        Session session = null;
         try {
 
             references = new ArrayList<>();
             session = resourceResolver.adaptTo(Session.class);
 
             if (session != null) {
-                queryManager = session.getWorkspace().getQueryManager();
             }
+            QueryManager queryManager = session.getWorkspace().getQueryManager();
             Query query = queryManager.createQuery(String.format(QUERY_TEMPLATE, linkTo, text), JCR_SQL2);
             QueryResult result = query.execute();
             NodeIterator nodeIter = result.getNodes();

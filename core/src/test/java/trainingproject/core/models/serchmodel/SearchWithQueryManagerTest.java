@@ -10,15 +10,21 @@ import javax.jcr.*;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 import javax.jcr.query.QueryResult;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
 
 public class SearchWithQueryManagerTest {
-    private String linkTo;
-    private String text;
+
+    private static final String LINK_TO = "content/";
+    private static final String TEXT = "testText";
+    private static final String fileReference = "content/dam";
+    private static final String QUERY = "SELECT * FROM [dam:Asset] WHERE ISDESCENDANTNODE('content/') AND CONTAINS(*, 'testText')";
+    private static final String JSR_SQL2 = "JCR-SQL2";
+
+    private List<String> testPaths = Collections.singletonList(fileReference);
 
     @Mock
     private QueryResult result;
@@ -37,34 +43,27 @@ public class SearchWithQueryManagerTest {
     @Mock
     private Workspace workspace;
 
+    private SearchWithQueryManager searchWithQueryManager;
+
     @Before
     public void setUp() {
+        searchWithQueryManager = new SearchWithQueryManager();
         MockitoAnnotations.initMocks(this);
-        linkTo = "content/";
-        text = "test text";
     }
 
     @Test
     public void GetPaths_ViaQueryManagerWithLinkToAndTextNotNull_ReturnsList() throws RepositoryException {
-        SearchWithQueryManager searchWithQueryManager = new SearchWithQueryManager();
-        String fileReference = "content/dam";
-        List testPaths = new ArrayList<>();
-        final String QUERY_TEMPLATE = "SELECT * FROM [dam:Asset] WHERE ISDESCENDANTNODE('%s') AND CONTAINS(*, '%s')";
-        String sqlStatement = String.format(QUERY_TEMPLATE, linkTo, text);
-        String JSR_SQL2 = "JCR-SQL2";
-
         when(resourceResolver.adaptTo(Session.class)).thenReturn(session);
         when(session.getWorkspace()).thenReturn(workspace);
         when(session.getWorkspace().getQueryManager()).thenReturn(queryManager);
-        when(queryManager.createQuery(sqlStatement, JSR_SQL2)).thenReturn(query);
+        when(queryManager.createQuery(QUERY, JSR_SQL2)).thenReturn(query);
         when(query.execute()).thenReturn(result);
         when(result.getNodes()).thenReturn(nodeIter);
         when(nodeIter.nextNode()).thenReturn(newNode);
         when(nodeIter.hasNext()).thenReturn(true, false);
         when(newNode.getPath()).thenReturn(fileReference);
 
-        testPaths.add(fileReference);
-        List<String> paths = searchWithQueryManager.getPaths(linkTo, text, resourceResolver);
+        List<String> paths = searchWithQueryManager.getPaths(LINK_TO, TEXT, resourceResolver);
 
         assertEquals(testPaths, paths);
     }

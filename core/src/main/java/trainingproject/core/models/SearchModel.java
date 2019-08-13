@@ -38,7 +38,7 @@ public class SearchModel {
     protected void init() {
     }
 
-    List getResult() {
+    public List getResult() {
         SearchWithQueryFactory searchWithQueryFactory = new SearchWithQueryFactory();
         SearchWithQuery searchWithQueryFactoryExecutor = searchWithQueryFactory.getExecutor(type);
         List paths = searchWithQueryFactoryExecutor.getPaths(linkTo, text, resourceResolver);

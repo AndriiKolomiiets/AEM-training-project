@@ -5,7 +5,6 @@ import com.day.cq.search.Query;
 import com.day.cq.search.QueryBuilder;
 import com.day.cq.search.result.SearchResult;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.models.annotations.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,13 +22,9 @@ public class SearchWithQueryBuilder implements SearchWithQuery {
 
     private final Logger LOGGER = LoggerFactory.getLogger(getClass());
 
-    @Optional
-    private Query query = null;
-
     @Override
     public List<String> getPaths(String linkTo, String text, ResourceResolver resourceResolver) {
         List<String> references = new ArrayList<>();
-        Iterator<Node> nodeItr;
 
         Map<String, String> predicateMap = new HashMap<>();
         predicateMap.put(PATH, linkTo);
@@ -37,13 +32,14 @@ public class SearchWithQueryBuilder implements SearchWithQuery {
         predicateMap.put(FULLTEXT, text);
 
         QueryBuilder queryBuilder = resourceResolver.adaptTo(QueryBuilder.class);
-        Session session = resourceResolver.adaptTo(Session.class);
-
-        if (queryBuilder != null) {
-            query = queryBuilder.createQuery(PredicateGroup.create(predicateMap), session);
+        if (queryBuilder == null) {
+            return Collections.emptyList();
         }
+
+        Session session = resourceResolver.adaptTo(Session.class);
+        Query query = queryBuilder.createQuery(PredicateGroup.create(predicateMap), session);
         SearchResult result = query.getResult();
-        nodeItr = result.getNodes();
+        Iterator<Node> nodeItr = result.getNodes();
         try {
             while (nodeItr.hasNext()) {
                 Node node = nodeItr.next();

@@ -52,6 +52,10 @@ public class SearchWithQueryBuilder implements SearchWithQuery {
             }
         } catch (RepositoryException e) {
             LOGGER.debug("Exception occurred: {}", e.getMessage());
+        } finally {
+            if (session != null && session.isLive()) {
+                session.logout();
+            }
         }
         return references;
     }

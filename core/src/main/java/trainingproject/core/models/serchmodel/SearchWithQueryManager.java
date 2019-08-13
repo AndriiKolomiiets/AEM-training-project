@@ -21,7 +21,7 @@ import static javax.jcr.query.Query.JCR_SQL2;
 public class SearchWithQueryManager implements SearchWithQuery {
 
     private final Logger LOGGER = LoggerFactory.getLogger(getClass());
-
+    private Session session;
     private static final String QUERY_TEMPLATE = "SELECT * FROM [dam:Asset] WHERE ISDESCENDANTNODE('%s') AND CONTAINS(*, '%s')";
 
     @Optional
@@ -33,7 +33,7 @@ public class SearchWithQueryManager implements SearchWithQuery {
         try {
 
             references = new ArrayList<>();
-            Session session = resourceResolver.adaptTo(Session.class);
+            session = resourceResolver.adaptTo(Session.class);
 
             if (session != null) {
                 queryManager = session.getWorkspace().getQueryManager();
@@ -48,6 +48,10 @@ public class SearchWithQueryManager implements SearchWithQuery {
             }
         } catch (RepositoryException | NullPointerException e) {
             LOGGER.debug("Exception occurred: {}", e.getMessage());
+        } finally {
+            if (session != null && session.isLive()) {
+                session.logout();
+            }
         }
         return references;
     }

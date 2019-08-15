@@ -1,0 +1,8 @@
+Text to find: ${properties.text}<br>
+Class for processing: ${properties.type}<br>
+Path for searching: ${properties.linkTo}<br>
+
+<sly data-sly-use.searchService="trainingproject.core.models.SearchModel">
+    <!--Element is under path(es):-->
+    Asset location: ${searchService.getResult}
+</sly>

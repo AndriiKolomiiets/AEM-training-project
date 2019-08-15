@@ -1,8 +1,23 @@
+<!--Adding 'Drug component here'-->
+<sly data-sly-include="/libs/wcm/core/components/init/init.jsp" />
+<div data-sly-resource="${'content' @ resourceType='foundation/components/parsys'}"></div>
+<!--End of adding 'Drug component here'-->
+
+<!--Adding 'Dialogue box'-->
+<div data-sly-resource="${'search-text-menu' @ resourceType='/apps/training/components/search-text-menu'}"></div>
+<!--End of adding 'Dialogue box'-->
+
 <html>
 <head>
     <title>Hello World!</title>
 </head>
 <body>
+
+<sly data-sly-use.searchService="trainingproject.core.models..SearchServiceImpl">
+    <!--Element is under path(es):-->
+    ${searchService.getResult}
+</sly>
+
 
 <div>
     <div>logo</div>
@@ -10,6 +25,11 @@
         <div>toptoolbar</div>
     </div>
     <div data-sly-resource="${'topnav' @ resourceType='training/components/topnav'}"></div>
+
+</div>
+
+<div>
+    <div data-sly-resource="${'search-text-dropdown' @ resourceType='training/components/search-text-dropdown'}"></div>
 </div>
 
 <h1>Hello world!</h1>

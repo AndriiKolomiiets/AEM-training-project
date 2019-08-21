@@ -22,11 +22,14 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.mockito.Matchers.anyMap;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({Collections.class, PageChangeObservation.class, Value.class})
-public class PageChangeObservationTest {
+@PrepareForTest({Collections.class, PageDeleteObservation.class, Value.class})
+public class PageDeleteObservationTest {
     private final static String MIXIN_TYPE = "jcr:mixinTypes";
     private final static String MIXIN_VERSIONABLE = "mix:versionable";
     private final static String eventPath = "/content/node/testproject/event/jcr:content";
@@ -36,9 +39,11 @@ public class PageChangeObservationTest {
     private Map<String, Object> props;
 
     @InjectMocks
-    private PageChangeObservation pageChangeObservation;
+    private PageDeleteObservation pageDeleteObservation;
     @Mock
     private SlingRepository repository;
+    @Mock
+    private JobManager jobManager;
     @Mock
     private Workspace workspace;
     @Mock
@@ -77,7 +82,7 @@ public class PageChangeObservationTest {
         doNothing().when(observationManager).addEventListener(any(EventListener.class), anyInt(),
                 anyString(), anyBoolean(), anyObject(), anyObject(), anyBoolean());
 
-        pageChangeObservation.activate(componentContext);
+        pageDeleteObservation.activate(componentContext);
 
         verify(observationManager).addEventListener(any(EventListener.class), anyInt(),
                 anyString(), anyBoolean(), anyObject(), anyObject(), anyBoolean());
@@ -89,7 +94,7 @@ public class PageChangeObservationTest {
         doNothing().when(session).logout();
         when(session.isLive()).thenReturn(true);
 
-        pageChangeObservation.deactivate();
+        pageDeleteObservation.deactivate();
 
         verify(session).logout();
     }
@@ -103,7 +108,7 @@ public class PageChangeObservationTest {
         when(node.getPath()).thenReturn(pagePath);
         when(value.getString()).thenReturn(MIXIN_VERSIONABLE);
         when(node.getProperty(MIXIN_TYPE)).thenReturn(property);
-        Value values[] = new Value[]{value};
+        Value[] values = new Value[]{value};
         when(property.getValues()).thenReturn(values);
         when(session.getWorkspace()).thenReturn(workspace);
         when(workspace.getVersionManager()).thenReturn(versionManager);
@@ -112,6 +117,7 @@ public class PageChangeObservationTest {
         doNothing().when(session).save();
         doNothing().when(session).refresh(true);
         when(event.getType()).thenReturn(1);
+        when(event.getInfo()).thenReturn(info);
         when(info.get(anyString())).thenReturn(value);
         when(value.toString()).thenReturn(beforeValue);
         when(event.getPath()).thenReturn(eventPath);
@@ -119,9 +125,9 @@ public class PageChangeObservationTest {
         PowerMockito.when(Collections.singletonMap(beforeValue, props))
                 .thenReturn(singletonMap);
 
-        pageChangeObservation.onEvent(eventIterator);
+        pageDeleteObservation.onEvent(eventIterator);
 
-        verify(versionManager).checkin(pagePath);
+        verify(jobManager).addJob(anyString(), anyMap());
     }
 
     @Test
@@ -146,9 +152,10 @@ public class PageChangeObservationTest {
         PowerMockito.when(Collections.singletonMap(beforeValue, props))
                 .thenReturn(singletonMap);
 
-        pageChangeObservation.onEvent(eventIterator);
+        pageDeleteObservation.onEvent(eventIterator);
 
         verify(session).save();
         verify(session).refresh(true);
+        verify(jobManager).addJob(anyString(), anyMap());
     }
 }

@@ -1,5 +1,6 @@
 package trainingproject.core.listeners;
 
+import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.osgi.framework.Constants;
 import org.osgi.service.component.ComponentContext;
@@ -16,25 +17,33 @@ import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 @Component(immediate = true,
         service = EventListener.class,
         property = {
-                Constants.SERVICE_DESCRIPTION + "=Training repository change observation",
+                Constants.SERVICE_DESCRIPTION + "=Training repository delete observation",
                 EventConstants.EVENT_TOPIC + "=org/apache/sling/api/resource/Resource/*"
         })
-public class PageChangeObservation implements EventListener {
+public class PageDeleteObservation implements EventListener {
     private final static String MIXIN_VERSIONABLE = "mix:versionable";
     private final static String NODE_PATH = "/content/myapp";
     private final static String MIXIN_TYPE = "jcr:mixinTypes";
     private final static String JCR_CONTENT = "jcr:content";
+    private final static String JOB_TOPIC = "log/write/deleted/nodes";
 
-    private final static String SUBSTRING_SEPARATOR = "/";
+    private final static String BEFORE_VALUE = "beforeValue";
+    private final static String REMOVED_PROPERTIES = "REMOVED_PROPERTIES";
     private final static String ADMIN = "admin";
     private final Logger LOG = LoggerFactory.getLogger(getClass());
     private Session session;
     @Reference
     private SlingRepository repository;
+    @Reference
+    private JobManager jobManager;
+    private final Map<String, Object> props = new HashMap<>();
 
     @Activate
     void activate(ComponentContext context) {
@@ -43,7 +52,7 @@ public class PageChangeObservation implements EventListener {
             if (session != null) {
                 session.getWorkspace().getObservationManager().addEventListener(
                         this,
-                        Event.PROPERTY_ADDED | Event.PROPERTY_CHANGED | Event.NODE_ADDED | Event.NODE_REMOVED | Event.PROPERTY_REMOVED,
+                        Event.NODE_REMOVED | Event.PROPERTY_REMOVED,
                         NODE_PATH,
                         true,
                         null,
@@ -54,11 +63,14 @@ public class PageChangeObservation implements EventListener {
             }
         } catch (RepositoryException e) {
             LOG.error("Under PageChangeObservation was got exception: {}", e.getMessage());
+            if (session.isLive()) {
+                session.logout();
+            }
         }
     }
 
     @Deactivate
-    void deactivate() {
+    public void deactivate() {
         if (session != null && session.isLive()) {
             session.logout();
         }
@@ -71,16 +83,20 @@ public class PageChangeObservation implements EventListener {
             try {
                 String pagePath = getPagePath(event);
                 makeVersionableIfNeeded(pagePath);
-                session.getWorkspace().getVersionManager().checkin(pagePath);
+                String beforeValue = ((Value) event.getInfo().get(BEFORE_VALUE)).getString();
+                props.put(event.getPath(), beforeValue);
             } catch (RepositoryException e) {
                 LOG.debug("Under PageChangeObservation was got exception: {}", e.getMessage());
             }
         }
+        jobManager.addJob(JOB_TOPIC, Collections.singletonMap(REMOVED_PROPERTIES, props));
+        props.clear();
     }
 
     private String getPagePath(Event event) throws RepositoryException {
-        int startSubstringIndex = 0;
         String eventPath = event.getPath();
+        int startSubstringIndex = 0;
+        String SUBSTRING_SEPARATOR = "/";
 
         return eventPath.contains(JCR_CONTENT)
                 ? eventPath.substring(startSubstringIndex, eventPath.indexOf(JCR_CONTENT))

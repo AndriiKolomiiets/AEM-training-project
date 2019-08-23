@@ -52,10 +52,12 @@ public class TrainingWorkflowProcessTest {
         when(session.getNode(PATH_FROM_DIALOGUE)).thenReturn(null);
         doNothing().when(session).move(PAYLOAD, PATH_FROM_DIALOGUE);
         doNothing().when(session).save();
+        doNothing().when(session).logout();
 
         trainingWorkflowProcess.execute(workItem, workflowSession, map);
 
         verify(session).move(PAYLOAD, PATH_FROM_DIALOGUE);
         verify(session).save();
+        verify(session).logout();
     }
 }

@@ -1,0 +1,72 @@
+/name "mode1-server"
+
+/farms
+{
+    /website
+    {
+        /clientheaders
+        {
+        # List of headers that are passed on
+        }
+        /virtualhosts
+        {
+        # List of URLs for this Web site
+        }
+        /sessionmanagement
+        {
+        # settings for user authentification
+        }
+        /renders
+        {
+        # List of AEM instances that render the documents
+        }
+        /filter
+        {
+            /0001  { /glob "*" /type "allow" }
+            /0002 { /type "deny" /url "/content/[.]*.(doc|docx)" }
+        }
+        /vanity_urls
+        {
+        # List of vanity URLs
+        }
+        /cache
+        {
+        # Cache configuration
+        /rules
+        {
+        # List of cachable documents
+            /0000  { /glob "*" /type "allow" }
+            /0001  { /glob "*.html" /selectors "nocache" /type "deny" }
+        }
+        /invalidate
+        {
+        # List of auto-invalidated documents
+            /0000  { /glob "*" /type "deny" }
+            /0001  { /glob "*.html" /type "allow" }
+        }
+        /ignoreUrlParams
+        {
+            /0001 { /glob "*" /type "deny" }
+            /0002 { /glob "cid" /type "allow" }
+            /0003 { /glob "utm_campaign" /type "allow" }
+        }
+        /serveStaleOnError "1"
+        }
+        /statistics
+        {
+        /categories
+        {
+        # The document categories that are used for load balancing estimates
+        }
+        }
+        /stickyConnectionsFor "/myFolder"
+        /health_check
+        {
+        # Page gets contacted when an instance returns a 500
+        }
+        /retryDelay "1"
+        /numberOfRetries "5"
+        /unavailablePenalty "1"
+        /failover "1"
+    }
+}
